@@ -1,44 +1,99 @@
-# General
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-
-# Editor folders
-.atom/
-.history
-.svn/
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Build and cache
-.build/
-.buildlog/
-migrate_working_dir/
+# Flutter
 .dart_tool/
+.packages
+.pub-cache/
+build/
+flutter_*.png
+generated_plugin_registrant.dart
+.melos_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
-.build/
-**/doc/api/
-**/ios/Flutter/.last_build_id
-/build/
+.packages
 
-# Android build outputs
-/android/app/debug
-/android/app/profile
-/android/app/release
 
-# Symbolication & obfuscation
-app.*.symbols
-app.*.map.json
+# IntelliJ / Android Studio
+.idea/
+*.iml
 
-# Swift/Apple
-.swiftpm/
+# VSCode
+.vscode/
 
-# VS Code (uncomment to ignore VS Code settings)
-# .vscode/
+# Xcode
+*.xcworkspace
+*.xcuserstate
+*.xccheckout
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+*.xcuserdata
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/*.iml
+android/.settings/
+*.keystore
+*.jks
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/engine/
+ios/.generated/
+ios/Runner.xcworkspace/
+
+# macOS
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/Flutter.framework
+macos/Flutter/Flutter.podspec
+
+# Web
+web/.dart_tool/
+
+# Windows
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+windows/CMakeLists.txt.user
+
+# Linux
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugins.cmake
+linux/CMakeLists.txt.user
+
+# Firebase Configs (caso utilize)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Crashlytics
+crashlytics/
+
+# Arquivos temporários e caches
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.db
+*.sqlite
+*.lock
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos sensíveis
+.env
+*.env
+*.pem
+*.key
+
+# Others
+.midea/
+*.orig

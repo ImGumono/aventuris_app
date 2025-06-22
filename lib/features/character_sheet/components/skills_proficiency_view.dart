@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class SkillsProficiencyView extends ConsumerWidget {
   const SkillsProficiencyView({super.key});
 
-  // Lista de todas as perícias
   static const List<String> allSkills = [
     'Atletismo', // Força
     'Acrobacia', 'Furtividade', 'Prestidigitação', // Destreza
@@ -27,7 +26,7 @@ class SkillsProficiencyView extends ConsumerWidget {
       return const Center(child: Text('Nenhum personagem carregado'));
     }
 
-    final int half = (allSkills.length / 2).ceil();
+    final half = (allSkills.length / 2).ceil();
     final leftSkills = allSkills.sublist(0, half);
     final rightSkills = allSkills.sublist(half);
 
@@ -78,12 +77,12 @@ class SkillsProficiencyView extends ConsumerWidget {
       itemCount: skills.length,
       itemBuilder: (context, index) {
         final skill = skills[index];
-
         final proficiency = character.skills[skill] ?? ProficiencyType.none;
         final value = controller.getSkillValue(skill);
 
         return GestureDetector(
-          onLongPress: () => _showPopupSkillEdit(skill, controller, context),
+          onTap: () => controller.toggleProficiency(skill),
+          onLongPress: () => controller.setExpertise(skill),
           child: SkillProficiencyWidget(
             title: skill,
             proficiency: proficiency,
@@ -91,79 +90,6 @@ class SkillsProficiencyView extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  void _showPopupSkillEdit(
-    String skill,
-    CharacterController controller,
-    BuildContext context,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Qual a proficiência em $skill?',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildProficiencyBtn(
-                      skill,
-                      ProficiencyType.none,
-                      'Inapto',
-                      controller,
-                      context,
-                    ),
-                    _buildProficiencyBtn(
-                      skill,
-                      ProficiencyType.proficiency,
-                      'Proficiente',
-                      controller,
-                      context,
-                    ),
-                    _buildProficiencyBtn(
-                      skill,
-                      ProficiencyType.expertise,
-                      'Especialista',
-                      controller,
-                      context,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  TextButton _buildProficiencyBtn(
-    String skill,
-    ProficiencyType proficiency,
-    String text,
-    CharacterController controller,
-    BuildContext context,
-  ) {
-    return TextButton(
-      onPressed: () {
-        controller.updateSkill(skill, proficiency);
-        Navigator.pop(context);
-      },
-      child: Text(text.toUpperCase(), style: const TextStyle(fontSize: 8)),
     );
   }
 }

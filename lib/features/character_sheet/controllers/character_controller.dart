@@ -53,31 +53,47 @@ class CharacterController extends StateNotifier<CharacterModel?> {
   void updateCharisma(int value) =>
       _updateCharacterField((c) => c.copyWith(charisma: value));
 
-  void updateSkill(String skill, ProficiencyType proficiency) {
-    if (state == null) return;
-    final updatedSkills = Map<String, ProficiencyType>.from(state!.skills);
-    updatedSkills[skill] = proficiency;
-    _updateCharacterField((c) => c.copyWith(skills: updatedSkills));
-  }
-
   void levelUp() =>
       _updateCharacterField((c) => c.copyWith(level: c.level + 1));
 
-  void clear() {
-    state = null;
+  void clear() => state = null;
+
+  // ====== Proficiência ======
+
+  /// Alterna entre [none] e [proficiency]
+  void toggleProficiency(String skill) {
+    if (state == null) return;
+    final current = state!.skills[skill] ?? ProficiencyType.none;
+    final next = (current == ProficiencyType.proficiency)
+        ? ProficiencyType.none
+        : ProficiencyType.proficiency;
+
+    final updatedSkills = Map<String, ProficiencyType>.from(state!.skills);
+    updatedSkills[skill] = next;
+
+    _updateCharacterField((c) => c.copyWith(skills: updatedSkills));
+  }
+
+  /// Seta diretamente como [expertise]
+  void setExpertise(String skill) {
+    if (state == null) return;
+    final updatedSkills = Map<String, ProficiencyType>.from(state!.skills);
+    updatedSkills[skill] = ProficiencyType.expertise;
+
+    _updateCharacterField((c) => c.copyWith(skills: updatedSkills));
   }
 
   // ====== Cálculo de Regras ======
 
-  int calculateModifier(int value) {
-    return ((value - 10) / 2).floor();
-  }
+  int calculateModifier(int value) => ((value - 10) / 2).floor();
 
   int calculateProficiencyBonus() {
     if (state == null) return 0;
     final level = state!.level;
     return ((level - 1) ~/ 4) + 2;
   }
+
+  int getProficiencyBonus() => calculateProficiencyBonus();
 
   int getSkillValue(String skill) {
     if (state == null) return 0;
@@ -87,7 +103,7 @@ class CharacterController extends StateNotifier<CharacterModel?> {
     final modifier = calculateModifier(abilityValue);
 
     final proficiency = state!.skills[skill] ?? ProficiencyType.none;
-    final proficiencyBonus = calculateProficiencyBonus();
+    final proficiencyBonus = getProficiencyBonus();
 
     switch (proficiency) {
       case ProficiencyType.none:
@@ -99,13 +115,19 @@ class CharacterController extends StateNotifier<CharacterModel?> {
     }
   }
 
-  int passivePerception() {
+  int getPassivePerception() {
     if (state == null) return 0;
-    final modifier = calculateModifier(state!.wisdom);
+    final wisdomModifier = calculateModifier(state!.wisdom);
     final hasProficiency =
         (state!.skills['Percepção'] ?? ProficiencyType.none) !=
         ProficiencyType.none;
-    return 10 + modifier + (hasProficiency ? calculateProficiencyBonus() : 0);
+    final bonus = hasProficiency ? getProficiencyBonus() : 0;
+    return 10 + wisdomModifier + bonus;
+  }
+
+  int getInitiative() {
+    if (state == null) return 0;
+    return calculateModifier(state!.dexterity);
   }
 
   // ===== Helpers =====
@@ -156,24 +178,5 @@ class CharacterController extends StateNotifier<CharacterModel?> {
       default:
         return 10;
     }
-  }
-
-  int getProficiencyBonus() {
-    if (state == null) return 0;
-    return calculateProficiencyBonus();
-  }
-
-  int getPassivePerception() {
-    if (state == null) return 0;
-    final hasProficiency =
-        state!.skills.containsKey('Percepção') &&
-        (state!.skills['Percepção'] != ProficiencyType.none);
-    final bonus = hasProficiency ? getProficiencyBonus() : 0;
-    return 10 + calculateModifier(state!.wisdom) + bonus;
-  }
-
-  int getInitiative() {
-    if (state == null) return 0;
-    return calculateModifier(state!.dexterity);
   }
 }

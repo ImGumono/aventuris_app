@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/character_model.dart';
@@ -11,6 +12,9 @@ final characterProvider =
 
 class CharacterController extends StateNotifier<CharacterModel?> {
   final Ref _ref;
+
+  // Timer para incremento contínuo de maxLife
+  Timer? _incrementMaxLifeTimer;
 
   CharacterController(this._ref) : super(null);
 
@@ -32,6 +36,7 @@ class CharacterController extends StateNotifier<CharacterModel?> {
     state = update(state!);
   }
 
+  // Atualizações básicas de atributos
   void updateLife(int life) =>
       _updateCharacterField((c) => c.copyWith(life: life));
 
@@ -56,10 +61,81 @@ class CharacterController extends StateNotifier<CharacterModel?> {
   void levelUp() =>
       _updateCharacterField((c) => c.copyWith(level: c.level + 1));
 
+  // ====== Vida Atual ======
+  void incrementLife() {
+    if (state == null) return;
+    final newLife = (state!.life + 1).clamp(0, state!.maxLife);
+    _updateCharacterField((c) => c.copyWith(life: newLife));
+  }
+
+  void decrementLife() {
+    if (state == null) return;
+    final newLife = (state!.life - 1).clamp(0, state!.maxLife);
+    _updateCharacterField((c) => c.copyWith(life: newLife));
+  }
+
+  void setLife(int value) {
+    if (state == null) return;
+    final newLife = value.clamp(0, state!.maxLife);
+    _updateCharacterField((c) => c.copyWith(life: newLife));
+  }
+
+  // ====== Vida Máxima ======
+  void incrementMaxLife() {
+    if (state == null) return;
+    _updateCharacterField((c) => c.copyWith(maxLife: c.maxLife + 1));
+  }
+
+  void decrementMaxLife() {
+    if (state == null) return;
+    final newMax = (state!.maxLife - 1).clamp(1, 9999);
+    _updateCharacterField((c) => c.copyWith(maxLife: newMax));
+  }
+
+  void setMaxLife(int value) {
+    if (state == null) return;
+    final newMax = value.clamp(1, 9999);
+    _updateCharacterField((c) => c.copyWith(maxLife: newMax));
+  }
+
+  // Incremento contínuo para maxLife
+  void startIncrementMaxLife() {
+    if (state == null) return;
+    _incrementMaxLifeTimer?.cancel();
+    _incrementMaxLifeTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      _,
+    ) {
+      _updateCharacterField((c) => c.copyWith(maxLife: c.maxLife + 2));
+    });
+  }
+
+  void stopIncrementMaxLife() {
+    _incrementMaxLifeTimer?.cancel();
+  }
+
+  // ====== Vida Temporária ======
+  void incrementTemporaryLife() {
+    if (state == null) return;
+    final newTemp = (state!.temporaryLife + 1).clamp(0, 9999);
+    _updateCharacterField((c) => c.copyWith(temporaryLife: newTemp));
+  }
+
+  void decrementTemporaryLife() {
+    if (state == null) return;
+    final newTemp = (state!.temporaryLife - 1).clamp(0, 9999);
+    _updateCharacterField((c) => c.copyWith(temporaryLife: newTemp));
+  }
+
+  void setTemporaryLife(int value) {
+    if (state == null) return;
+    final newTemp = value.clamp(0, 9999);
+    _updateCharacterField((c) => c.copyWith(temporaryLife: newTemp));
+  }
+
+  // ====== Limpar Estado ======
   void clear() => state = null;
 
   // ====== Proficiência ======
-
   /// Alterna entre [none] e [proficiency]
   void toggleProficiency(String skill) {
     if (state == null) return;
@@ -84,7 +160,6 @@ class CharacterController extends StateNotifier<CharacterModel?> {
   }
 
   // ====== Cálculo de Regras ======
-
   int calculateModifier(int value) => ((value - 10) / 2).floor();
 
   int calculateProficiencyBonus() {
@@ -118,10 +193,22 @@ class CharacterController extends StateNotifier<CharacterModel?> {
   int getPassivePerception() {
     if (state == null) return 0;
     final wisdomModifier = calculateModifier(state!.wisdom);
-    final hasProficiency =
-        (state!.skills['Percepção'] ?? ProficiencyType.none) !=
-        ProficiencyType.none;
-    final bonus = hasProficiency ? getProficiencyBonus() : 0;
+    final proficiency = state!.skills['Percepção'] ?? ProficiencyType.none;
+    final proficiencyBonus = getProficiencyBonus();
+
+    int bonus = 0;
+    switch (proficiency) {
+      case ProficiencyType.none:
+        bonus = 0;
+        break;
+      case ProficiencyType.proficiency:
+        bonus = proficiencyBonus;
+        break;
+      case ProficiencyType.expertise:
+        bonus = proficiencyBonus * 2;
+        break;
+    }
+
     return 10 + wisdomModifier + bonus;
   }
 
@@ -131,7 +218,6 @@ class CharacterController extends StateNotifier<CharacterModel?> {
   }
 
   // ===== Helpers =====
-
   String _abilityForSkill(String skill) {
     switch (skill) {
       case 'Atletismo':
@@ -178,5 +264,45 @@ class CharacterController extends StateNotifier<CharacterModel?> {
       default:
         return 10;
     }
+  }
+
+  @override
+  void dispose() {
+    _incrementMaxLifeTimer?.cancel();
+    super.dispose();
+  }
+
+  int get life {
+    if (state == null) return 0;
+    return state!.life;
+  }
+
+  int get maxLife {
+    if (state == null) return 0;
+    return state!.maxLife;
+  }
+
+  int get temporaryLife {
+    if (state == null) return 0;
+    return state!.temporaryLife;
+  }
+
+  // ====== Classe de Armadura ======
+  void incrementArmorClass() {
+    if (state == null) return;
+    final newAC = (state!.armorClass + 1).clamp(0, 99);
+    _updateCharacterField((c) => c.copyWith(armorClass: newAC));
+  }
+
+  void decrementArmorClass() {
+    if (state == null) return;
+    final newAC = (state!.armorClass - 1).clamp(0, 99);
+    _updateCharacterField((c) => c.copyWith(armorClass: newAC));
+  }
+
+  void setArmorClass(int value) {
+    if (state == null) return;
+    final newAC = value.clamp(0, 99);
+    _updateCharacterField((c) => c.copyWith(armorClass: newAC));
   }
 }

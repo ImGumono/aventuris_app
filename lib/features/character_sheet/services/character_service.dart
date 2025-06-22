@@ -21,7 +21,6 @@ class CharacterService {
       life: 12,
       maxLife: 12,
       temporaryLife: 0,
-      temporaryMaxLife: 0,
       armorClass: 15,
       background: 'Soldier',
       alignment: 'Neutral Good',

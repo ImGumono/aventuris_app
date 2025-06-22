@@ -18,7 +18,6 @@ class CharacterModel {
   final int life;
   final int maxLife;
   final int temporaryLife;
-  final int temporaryMaxLife;
   final int armorClass;
 
   final String background;
@@ -42,7 +41,6 @@ class CharacterModel {
     required this.life,
     required this.maxLife,
     required this.temporaryLife,
-    required this.temporaryMaxLife,
     required this.armorClass,
     required this.background,
     required this.alignment,
@@ -65,7 +63,6 @@ class CharacterModel {
     int? life,
     int? maxLife,
     int? temporaryLife,
-    int? temporaryMaxLife,
     int? armorClass,
     String? background,
     String? alignment,
@@ -87,7 +84,6 @@ class CharacterModel {
       life: life ?? this.life,
       maxLife: maxLife ?? this.maxLife,
       temporaryLife: temporaryLife ?? this.temporaryLife,
-      temporaryMaxLife: temporaryMaxLife ?? this.temporaryMaxLife,
       armorClass: armorClass ?? this.armorClass,
       background: background ?? this.background,
       alignment: alignment ?? this.alignment,

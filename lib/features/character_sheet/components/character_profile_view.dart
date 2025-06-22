@@ -1,4 +1,5 @@
 import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
+import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,87 +17,16 @@ class CharacterProfileView extends ConsumerWidget {
 
     return Container(
       color: Theme.of(context).colorScheme.surface,
-      width: MediaQuery.of(context).size.width,
+      width: double.infinity,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Coluna Esquerda
-              SizedBox(
-                height: 200,
-                width: 75,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildProperty(
-                      icon: Icons.favorite_sharp,
-                      title: 'Pontos de Vida',
-                      text: '${character.life}/${character.maxLife}',
-                    ),
-                    _buildProperty(
-                      icon: Icons.favorite_border_sharp,
-                      title: 'Pontos de Vida Temporários',
-                      text:
-                          '${character.temporaryLife}/${character.temporaryMaxLife}',
-                    ),
-                    _buildProperty(
-                      icon: Icons.shield,
-                      title: 'Classe de Armadura',
-                      text: '${character.armorClass}',
-                    ),
-                  ],
-                ),
-              ),
-
-              // Avatar no Meio
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 25),
-                    child: Container(
-                      height: 150,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline,
-                          width: 3,
-                        ),
-                      ),
-                      child: const Icon(Icons.person, size: 50),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Coluna Direita
-              SizedBox(
-                height: 200,
-                width: 75,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildProperty(
-                      icon: Icons.flash_on,
-                      title: 'Iniciativa',
-                      text: '+${controller.getInitiative().toString()}',
-                    ),
-                    _buildProperty(
-                      icon: Icons.remove_red_eye,
-                      title: 'Percepção Passiva',
-                      text: controller.getPassivePerception().toString(),
-                    ),
-                    _buildProperty(
-                      icon: Icons.sports_martial_arts,
-                      title: 'Bônus de Proficiência',
-                      text: '+${controller.getProficiencyBonus().toString()}',
-                    ),
-                  ],
-                ),
-              ),
+              _buildLeftColumn(context, controller, character),
+              _buildAvatar(context),
+              _buildRightColumn(controller),
             ],
           ),
           _buildTitleBar(context, character),
@@ -105,7 +35,154 @@ class CharacterProfileView extends ConsumerWidget {
     );
   }
 
-  /// Widget de propriedade individual
+  /// ======================
+  /// LADO ESQUERDO
+  /// ======================
+  Widget _buildLeftColumn(
+    BuildContext context,
+    CharacterController controller,
+    CharacterModel character,
+  ) {
+    return SizedBox(
+      height: 200,
+      width: 75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildLifeProperty(
+            context: context,
+            title: 'Pontos de Vida',
+            text: '${character.life}/${character.maxLife}',
+            icon: Icons.favorite,
+            onTap: () => _openValueDialog(
+              context: context,
+              title: 'PV Atual',
+              initialValue: character.life,
+              minValue: 0,
+              onSave: controller.setLife,
+            ),
+            onLongPress: () => _openValueDialog(
+              context: context,
+              title: 'PV Máximo',
+              initialValue: character.maxLife,
+              minValue: 1,
+              onSave: controller.setMaxLife,
+            ),
+            onDoubleTap: controller.decrementLife,
+          ),
+          _buildLifeProperty(
+            context: context,
+            title: 'Vida Temporária',
+            text: '${character.temporaryLife}',
+            icon: Icons.favorite_border,
+            onTap: () => _openValueDialog(
+              context: context,
+              title: 'Vida Temporária',
+              initialValue: character.temporaryLife,
+              minValue: 0,
+              onSave: controller.setTemporaryLife,
+            ),
+            onLongPress: () {
+              // TODO
+            },
+            onDoubleTap: controller.decrementTemporaryLife,
+          ),
+          _buildLifeProperty(
+            context: context,
+            title: 'Classe de Armadura',
+            text: '${character.armorClass}',
+            icon: Icons.shield,
+            onTap: () => _openValueDialog(
+              context: context,
+              title: 'Classe de Armadura',
+              initialValue: character.armorClass,
+              minValue: 0,
+              onSave: controller.setArmorClass,
+            ),
+            onLongPress: () {
+              // TODO
+            },
+            onDoubleTap: () {
+              // TODO
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ======================
+  /// LADO DIREITO
+  /// ======================
+  Widget _buildRightColumn(CharacterController controller) {
+    return SizedBox(
+      height: 200,
+      width: 75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildProperty(
+            icon: Icons.flash_on,
+            title: 'Iniciativa',
+            text: '+${controller.getInitiative()}',
+          ),
+          _buildProperty(
+            icon: Icons.remove_red_eye,
+            title: 'Percepção Passiva',
+            text: '${controller.getPassivePerception()}',
+          ),
+          _buildProperty(
+            icon: Icons.sports_martial_arts,
+            title: 'Bônus de Proficiência',
+            text: '+${controller.getProficiencyBonus()}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ======================
+  /// AVATAR
+  /// ======================
+  Widget _buildAvatar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 25),
+      child: Container(
+        height: 150,
+        width: 150,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline,
+            width: 3,
+          ),
+        ),
+        child: const Icon(Icons.person, size: 50),
+      ),
+    );
+  }
+
+  /// ======================
+  /// PROPRIEDADES
+  /// ======================
+  Widget _buildLifeProperty({
+    required BuildContext context,
+    required String title,
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+    required VoidCallback onLongPress,
+    required VoidCallback onDoubleTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      onDoubleTap: onDoubleTap,
+      child: _buildProperty(icon: icon, title: title, text: text),
+    );
+  }
+
   Widget _buildProperty({
     required String title,
     required String text,
@@ -135,8 +212,10 @@ class CharacterProfileView extends ConsumerWidget {
     );
   }
 
-  /// Barra inferior com nome, classe e nível
-  Container _buildTitleBar(BuildContext context, character) {
+  /// ======================
+  /// TÍTULO INFERIOR
+  /// ======================
+  Container _buildTitleBar(BuildContext context, CharacterModel character) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Theme.of(context).colorScheme.outline),
@@ -159,6 +238,65 @@ class CharacterProfileView extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// ======================
+  /// DIÁLOGO GENÉRICO
+  /// ======================
+  Future<void> _openValueDialog({
+    required BuildContext context,
+    required String title,
+    required int initialValue,
+    required int minValue,
+    required ValueChanged<int> onSave,
+  }) async {
+    int currentValue = initialValue;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(title),
+              content: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () {
+                      if (currentValue > minValue) {
+                        setState(() => currentValue--);
+                      }
+                    },
+                  ),
+                  Text('$currentValue', style: const TextStyle(fontSize: 24)),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      setState(() => currentValue++);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    onSave(currentValue);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

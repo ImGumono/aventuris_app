@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AbilityScoresView extends ConsumerWidget {
-  final CharacterModel character;
-
   const AbilityScoresView({super.key, required this.character});
+  final CharacterModel character;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final character = ref.watch(characterProvider);
+    final controller = ref.read(characterProvider.notifier);
 
     if (character == null) {
       return const Center(child: CircularProgressIndicator());
@@ -23,23 +23,46 @@ class AbilityScoresView extends ConsumerWidget {
         const TitleDivider(title: 'Valores de Atributos'),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
             children: [
-              _AbilityBox(title: 'STR', value: character.strength),
-              _AbilityBox(title: 'DEX', value: character.dexterity),
-              _AbilityBox(title: 'CON', value: character.constitution),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _AbilityBox(title: 'INT', value: character.intelligence),
-              _AbilityBox(title: 'WIS', value: character.wisdom),
-              _AbilityBox(title: 'CHA', value: character.charisma),
+              _AbilityBox(
+                title: 'For',
+                value: character.strength,
+                modifier: controller.calculateModifier(character.strength),
+                onEdit: (v) => controller.updateStrength(v),
+              ),
+              _AbilityBox(
+                title: 'Des',
+                value: character.dexterity,
+                modifier: controller.calculateModifier(character.dexterity),
+                onEdit: (v) => controller.updateDexterity(v),
+              ),
+              _AbilityBox(
+                title: 'Con',
+                value: character.constitution,
+                modifier: controller.calculateModifier(character.constitution),
+                onEdit: (v) => controller.updateConstitution(v),
+              ),
+              _AbilityBox(
+                title: 'Int',
+                value: character.intelligence,
+                modifier: controller.calculateModifier(character.intelligence),
+                onEdit: (v) => controller.updateIntelligence(v),
+              ),
+              _AbilityBox(
+                title: 'Sab',
+                value: character.wisdom,
+                modifier: controller.calculateModifier(character.wisdom),
+                onEdit: (v) => controller.updateWisdom(v),
+              ),
+              _AbilityBox(
+                title: 'Car',
+                value: character.charisma,
+                modifier: controller.calculateModifier(character.charisma),
+                onEdit: (v) => controller.updateCharisma(v),
+              ),
             ],
           ),
         ),
@@ -49,126 +72,129 @@ class AbilityScoresView extends ConsumerWidget {
   }
 }
 
-class _AbilityBox extends ConsumerWidget {
+class _AbilityBox extends StatelessWidget {
   final String title;
   final int value;
+  final int modifier;
+  final ValueChanged<int> onEdit;
 
-  const _AbilityBox({required this.title, required this.value});
+  const _AbilityBox({
+    required this.title,
+    required this.value,
+    required this.modifier,
+    required this.onEdit,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: () => _showEditPopup(context, ref),
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
-            ),
-            Text(
-              '${value > 10 ? '+' : ''}${((value - 10) / 2).floor()}',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2.0,
-              ),
-            ),
-            Text(
-              '$value',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditPopup(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: SingleChildScrollView(
+      onLongPress: () => _showEditPopup(context),
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        color: Theme.of(context).colorScheme.surface,
+        child: Container(
+          width: 115,
+          height: 115,
+          padding: const EdgeInsets.all(12),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Alterar $title'.toUpperCase(),
-                textAlign: TextAlign.center,
+                title.toUpperCase(),
                 style: const TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  letterSpacing: 2,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: SizedBox(
-                  width: 80,
-                  child: TextFormField(
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+              const SizedBox(height: 8),
+              Text(
+                modifier >= 0 ? '+$modifier' : '$modifier',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      offset: Offset(1, 2),
                     ),
-                    controller: controller,
-                  ),
+                  ],
                 ),
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    final input = int.tryParse(controller.text);
-                    if (input != null) {
-                      final charController = ref.read(
-                        characterProvider.notifier,
-                      );
-
-                      switch (title) {
-                        case 'Força':
-                          charController.updateStrength(input);
-                          break;
-                        case 'Destreza':
-                          charController.updateDexterity(input);
-                          break;
-                        case 'Constituição':
-                          charController.updateConstitution(input);
-                          break;
-                        case 'Inteligência':
-                          charController.updateIntelligence(input);
-                          break;
-                        case 'Sabedoria':
-                          charController.updateWisdom(input);
-                          break;
-                        case 'Carisma':
-                          charController.updateCharisma(input);
-                          break;
-                      }
-                    }
-
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
+              const SizedBox(height: 5),
+              Text(
+                '$value',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showEditPopup(BuildContext context) {
+    final tec = TextEditingController(text: value.toString());
+
+    final Map<String, String> fullNames = {
+      'For': 'Força',
+      'Des': 'Destreza',
+      'Con': 'Constituição',
+      'Int': 'Inteligência',
+      'Sab': 'Sabedoria',
+      'Car': 'Carisma',
+    };
+    final displayTitle = fullNames[title] ?? title;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(displayTitle, textAlign: TextAlign.center),
+        content: SizedBox(
+          width: 100,
+          height: 80,
+          child: Center(
+            child: SizedBox(
+              width: 80,
+              child: TextField(
+                autofocus: true,
+                controller: tec,
+                keyboardType: const TextInputType.numberWithOptions(
+                  signed: true,
+                ),
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Valor',
+                ),
+              ),
+            ),
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              final input = int.tryParse(tec.text);
+              if (input != null) {
+                onEdit(input);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

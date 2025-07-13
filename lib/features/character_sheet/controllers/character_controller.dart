@@ -13,9 +13,6 @@ final characterProvider =
 class CharacterController extends StateNotifier<CharacterModel?> {
   final Ref _ref;
 
-  // Timer para incremento contínuo de maxLife
-  Timer? _incrementMaxLifeTimer;
-
   CharacterController(this._ref) : super(null);
 
   // ====== Carregar Personagem ======
@@ -96,21 +93,6 @@ class CharacterController extends StateNotifier<CharacterModel?> {
     if (state == null) return;
     final newMax = value.clamp(1, 9999);
     _updateCharacterField((c) => c.copyWith(maxLife: newMax));
-  }
-
-  // Incremento contínuo para maxLife
-  void startIncrementMaxLife() {
-    if (state == null) return;
-    _incrementMaxLifeTimer?.cancel();
-    _incrementMaxLifeTimer = Timer.periodic(const Duration(milliseconds: 500), (
-      _,
-    ) {
-      _updateCharacterField((c) => c.copyWith(maxLife: c.maxLife + 2));
-    });
-  }
-
-  void stopIncrementMaxLife() {
-    _incrementMaxLifeTimer?.cancel();
   }
 
   // ====== Vida Temporária ======
@@ -264,12 +246,6 @@ class CharacterController extends StateNotifier<CharacterModel?> {
       default:
         return 10;
     }
-  }
-
-  @override
-  void dispose() {
-    _incrementMaxLifeTimer?.cancel();
-    super.dispose();
   }
 
   int get life {

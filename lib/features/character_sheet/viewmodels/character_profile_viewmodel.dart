@@ -66,7 +66,6 @@ class CharacterProfileViewModel extends StateNotifier<CharacterProfileUIState> {
         break;
       case 'maxLife':
         controller.setMaxLife((character.maxLife + amount).clamp(1, 9999));
-        // Se a vida atual for maior que a nova vida máxima, ajusta também
         if (character.life > (character.maxLife + amount).clamp(1, 9999)) {
           controller.setLife((character.maxLife + amount).clamp(1, 9999));
         }

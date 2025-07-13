@@ -37,7 +37,7 @@ class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context.go('/');
+            context.go('/character-select');
           },
         ),
       ),

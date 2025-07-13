@@ -9,9 +9,9 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = [
       {
-        'title': 'Ficha de\nPersonagens',
+        'title': 'Lista de\nPersonagens',
         'image': 'assets/images/char_icon_homepage.png',
-        'route': '/character-sheet',
+        'route': '/character-select',
       },
       {
         'title': 'Rolagem\nde Dados',

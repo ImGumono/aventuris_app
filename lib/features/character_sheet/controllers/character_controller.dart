@@ -305,4 +305,16 @@ class CharacterController extends StateNotifier<CharacterModel?> {
     final newAC = value.clamp(0, 99);
     _updateCharacterField((c) => c.copyWith(armorClass: newAC));
   }
+
+  // ====== Nome do Personagem ======
+  void updateName(String name) {
+    if (state == null) return;
+    _updateCharacterField((c) => c.copyWith(name: name));
+  }
+
+  // ====== Foto do Personagem ======
+  void updateAvatarPath(String path) {
+    if (state == null) return;
+    _updateCharacterField((c) => c.copyWith(avatarPath: path));
+  }
 }

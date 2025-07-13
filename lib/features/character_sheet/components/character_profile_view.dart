@@ -1,7 +1,9 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
 import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
 
 class CharacterProfileView extends ConsumerWidget {
   const CharacterProfileView({super.key});
@@ -25,11 +27,11 @@ class CharacterProfileView extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildLeftColumn(context, controller, character),
-              _buildAvatar(context),
+              _buildAvatar(context, character, controller),
               _buildRightColumn(controller),
             ],
           ),
-          _buildTitleBar(context, character),
+          _buildTitleBar(context, character, ref),
         ],
       ),
     );
@@ -68,7 +70,6 @@ class CharacterProfileView extends ConsumerWidget {
               minValue: 1,
               onSave: controller.setMaxLife,
             ),
-            onDoubleTap: controller.decrementLife,
           ),
           _buildLifeProperty(
             context: context,
@@ -82,10 +83,7 @@ class CharacterProfileView extends ConsumerWidget {
               minValue: 0,
               onSave: controller.setTemporaryLife,
             ),
-            onLongPress: () {
-              // TODO
-            },
-            onDoubleTap: controller.decrementTemporaryLife,
+            onLongPress: () {},
           ),
           _buildLifeProperty(
             context: context,
@@ -99,12 +97,7 @@ class CharacterProfileView extends ConsumerWidget {
               minValue: 0,
               onSave: controller.setArmorClass,
             ),
-            onLongPress: () {
-              // TODO
-            },
-            onDoubleTap: () {
-              // TODO
-            },
+            onLongPress: () {},
           ),
         ],
       ),
@@ -144,21 +137,43 @@ class CharacterProfileView extends ConsumerWidget {
   /// ======================
   /// AVATAR
   /// ======================
-  Widget _buildAvatar(BuildContext context) {
+  Widget _buildAvatar(
+    BuildContext context,
+    CharacterModel character,
+    CharacterController controller,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 25),
-      child: Container(
-        height: 150,
-        width: 150,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
-            width: 3,
+      child: GestureDetector(
+        onTap: () async {
+          final picker = ImagePicker();
+          final pickedFile = await picker.pickImage(
+            source: ImageSource.gallery,
+          );
+          if (pickedFile != null) {
+            controller.updateAvatarPath(pickedFile.path);
+          }
+        },
+        child: Container(
+          height: 150,
+          width: 150,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+              width: 3,
+            ),
           ),
+          child: character.avatarPath != null
+              ? ClipOval(
+                  child: Image.file(
+                    File(character.avatarPath!),
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const Icon(Icons.person, size: 50),
         ),
-        child: const Icon(Icons.person, size: 50),
       ),
     );
   }
@@ -173,12 +188,10 @@ class CharacterProfileView extends ConsumerWidget {
     required IconData icon,
     required VoidCallback onTap,
     required VoidCallback onLongPress,
-    required VoidCallback onDoubleTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
-      onDoubleTap: onDoubleTap,
       child: _buildProperty(icon: icon, title: title, text: text),
     );
   }
@@ -215,7 +228,11 @@ class CharacterProfileView extends ConsumerWidget {
   /// ======================
   /// TÍTULO INFERIOR
   /// ======================
-  Container _buildTitleBar(BuildContext context, CharacterModel character) {
+  Container _buildTitleBar(
+    BuildContext context,
+    CharacterModel character,
+    WidgetRef ref,
+  ) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Theme.of(context).colorScheme.outline),
@@ -226,18 +243,60 @@ class CharacterProfileView extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              '${character.name} | ${character.race} | ${character.characterClass} ${character.level}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                wordSpacing: 5,
-                letterSpacing: 3,
-                fontSize: 12,
+            child: GestureDetector(
+              onLongPress: () => _showEditNameDialog(context, ref, character),
+              child: Text(
+                character.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  wordSpacing: 5,
+                  letterSpacing: 3,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showEditNameDialog(
+    BuildContext context,
+    WidgetRef ref,
+    CharacterModel character,
+  ) async {
+    final controller = ref.read(characterProvider.notifier);
+    final TextEditingController textController = TextEditingController(
+      text: character.name,
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: TextField(
+            controller: textController,
+            decoration: const InputDecoration(labelText: 'Nome do personagem'),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (textController.text.trim().isNotEmpty) {
+                  controller.updateName(textController.text.trim());
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 

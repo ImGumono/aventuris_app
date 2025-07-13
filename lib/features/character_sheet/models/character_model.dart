@@ -25,6 +25,8 @@ class CharacterModel {
 
   final Map<String, ProficiencyType> skills;
 
+  final String? avatarPath;
+
   const CharacterModel({
     required this.id,
     required this.name,
@@ -45,6 +47,7 @@ class CharacterModel {
     required this.background,
     required this.alignment,
     required this.skills,
+    this.avatarPath,
   });
 
   CharacterModel copyWith({
@@ -67,6 +70,7 @@ class CharacterModel {
     String? background,
     String? alignment,
     Map<String, ProficiencyType>? skills,
+    String? avatarPath,
   }) {
     return CharacterModel(
       id: id ?? this.id,
@@ -88,6 +92,7 @@ class CharacterModel {
       background: background ?? this.background,
       alignment: alignment ?? this.alignment,
       skills: skills ?? this.skills,
+      avatarPath: avatarPath ?? this.avatarPath,
     );
   }
 }

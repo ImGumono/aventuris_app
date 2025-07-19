@@ -1,13 +1,18 @@
-import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
-import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 import 'package:aventuris_app/features/character_sheet/models/definitions.dart';
+import 'package:aventuris_app/features/character_sheet/providers/character_providers.dart';
+import 'package:aventuris_app/features/character_sheet/viewmodels/character_viewmodel.dart';
 import 'package:aventuris_app/features/character_sheet/widgets/skill_proficiency_widget.dart';
 import 'package:aventuris_app/features/character_sheet/widgets/title_divider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SkillsProficiencyComponent extends ConsumerWidget {
-  const SkillsProficiencyComponent({super.key});
+class CharacterSkillsProficiencyComponent extends ConsumerWidget {
+  final String characterId;
+
+  const CharacterSkillsProficiencyComponent({
+    super.key,
+    required this.characterId,
+  });
 
   static const List<String> allSkills = [
     'Atletismo', // Força
@@ -19,9 +24,20 @@ class SkillsProficiencyComponent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final character = ref.watch(characterProvider);
-    final controller = ref.read(characterProvider.notifier);
+    final viewModel = ref.watch(
+      characterViewModelProvider(characterId).notifier,
+    );
+    final state = ref.watch(characterViewModelProvider(characterId));
 
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.hasError) {
+      return Center(child: Text('Erro: ${state.error}'));
+    }
+
+    final character = viewModel.character;
     if (character == null) {
       return const Center(child: Text('Nenhum personagem carregado'));
     }
@@ -40,10 +56,9 @@ class SkillsProficiencyComponent extends ConsumerWidget {
             children: [
               Expanded(
                 child: _buildSkillList(
-                  leftSkills,
-                  character,
-                  controller,
-                  context,
+                  skills: leftSkills,
+                  viewModel: viewModel,
+                  context: context,
                 ),
               ),
               VerticalDivider(
@@ -52,10 +67,9 @@ class SkillsProficiencyComponent extends ConsumerWidget {
               ),
               Expanded(
                 child: _buildSkillList(
-                  rightSkills,
-                  character,
-                  controller,
-                  context,
+                  skills: rightSkills,
+                  viewModel: viewModel,
+                  context: context,
                 ),
               ),
             ],
@@ -65,12 +79,15 @@ class SkillsProficiencyComponent extends ConsumerWidget {
     );
   }
 
-  Widget _buildSkillList(
-    List<String> skills,
-    CharacterModel character,
-    CharacterController controller,
-    BuildContext context,
-  ) {
+  /// Constrói a lista de perícias em uma das colunas
+  Widget _buildSkillList({
+    required List<String> skills,
+    required CharacterViewModel viewModel,
+    required BuildContext context,
+  }) {
+    final character = viewModel.character;
+    if (character == null) return const SizedBox.shrink();
+
     return ListView.builder(
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
@@ -78,11 +95,11 @@ class SkillsProficiencyComponent extends ConsumerWidget {
       itemBuilder: (context, index) {
         final skill = skills[index];
         final proficiency = character.skills[skill] ?? ProficiencyType.none;
-        final value = controller.getSkillValue(skill);
+        final value = viewModel.getSkillValue(skill);
 
         return GestureDetector(
-          onTap: () => controller.toggleProficiency(skill),
-          onLongPress: () => controller.setExpertise(skill),
+          onTap: () => viewModel.toggleProficiency(skill),
+          onLongPress: () => viewModel.setExpertise(skill),
           child: SkillProficiencyWidget(
             title: skill,
             proficiency: proficiency,

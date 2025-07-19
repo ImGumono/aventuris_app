@@ -1,22 +1,36 @@
+import 'dart:io';
+import 'package:aventuris_app/features/character_sheet/providers/character_providers.dart';
+import 'package:aventuris_app/features/character_sheet/viewmodels/character_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
-import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:io';
 
 class CharacterProfileComponent extends ConsumerWidget {
-  const CharacterProfileComponent({super.key});
+  final String characterId;
+
+  const CharacterProfileComponent({super.key, required this.characterId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final character = ref.watch(characterProvider);
-    final controller = ref.read(characterProvider.notifier);
+    // Pega o viewModel e o estado async
+    final viewModel = ref.watch(
+      characterViewModelProvider(characterId).notifier,
+    );
+    final state = ref.watch(characterViewModelProvider(characterId));
 
+    // Trata loading, erro e ausência de personagem
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.hasError) {
+      return Center(child: Text('Erro: ${state.error}'));
+    }
+    final character = viewModel.character;
     if (character == null) {
       return const Center(child: Text('Nenhum personagem carregado'));
     }
 
+    // UI principal
     return Container(
       color: Theme.of(context).colorScheme.surface,
       width: double.infinity,
@@ -26,162 +40,21 @@ class CharacterProfileComponent extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildLeftColumn(context, controller, character),
-              _buildAvatar(context, character, controller),
-              _buildRightColumn(controller),
+              _buildLeftColumn(context, viewModel),
+              _buildAvatar(context, viewModel),
+              _buildRightColumn(viewModel),
             ],
           ),
-          _buildTitleBar(context, character, ref),
+          _buildTitleBar(context, viewModel),
         ],
       ),
     );
   }
 
   /// ======================
-  /// LADO ESQUERDO
+  /// PROPRIEDADES (USADAS NOS LADOS ESQUERDO E DIREITO)
   /// ======================
-  Widget _buildLeftColumn(
-    BuildContext context,
-    CharacterController controller,
-    CharacterModel character,
-  ) {
-    return SizedBox(
-      height: 200,
-      width: 75,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildLifeProperty(
-            context: context,
-            title: 'Pontos de Vida',
-            text: '${character.life}/${character.maxLife}',
-            icon: Icons.favorite,
-            onTap: () => _openValueDialog(
-              context: context,
-              title: 'PV Atual',
-              initialValue: character.life,
-              minValue: 0,
-              onSave: controller.setLife,
-            ),
-            onLongPress: () => _openValueDialog(
-              context: context,
-              title: 'PV Máximo',
-              initialValue: character.maxLife,
-              minValue: 1,
-              onSave: controller.setMaxLife,
-            ),
-          ),
-          _buildLifeProperty(
-            context: context,
-            title: 'Vida Temporária',
-            text: '${character.temporaryLife}',
-            icon: Icons.favorite_border,
-            onTap: () {},
-            onLongPress: () => _openValueDialog(
-              context: context,
-              title: 'Vida Temporária',
-              initialValue: character.temporaryLife,
-              minValue: 0,
-              onSave: controller.setTemporaryLife,
-            ),
-          ),
-          _buildLifeProperty(
-            context: context,
-            title: 'Classe de Armadura',
-            text: '${character.armorClass}',
-            icon: Icons.shield,
-            onTap: () {},
-            onLongPress: () => _openValueDialog(
-              context: context,
-              title: 'Classe de Armadura',
-              initialValue: character.armorClass,
-              minValue: 0,
-              onSave: controller.setArmorClass,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ======================
-  /// LADO DIREITO
-  /// ======================
-  Widget _buildRightColumn(CharacterController controller) {
-    return SizedBox(
-      height: 200,
-      width: 75,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildProperty(
-            icon: Icons.flash_on,
-            title: 'Iniciativa',
-            text: '+${controller.getInitiative()}',
-          ),
-          _buildProperty(
-            icon: Icons.remove_red_eye,
-            title: 'Percepção Passiva',
-            text: '${controller.getPassivePerception()}',
-          ),
-          _buildProperty(
-            icon: Icons.sports_martial_arts,
-            title: 'Bônus de Proficiência',
-            text: '+${controller.getProficiencyBonus()}',
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ======================
-  /// AVATAR
-  /// ======================
-  Widget _buildAvatar(
-    BuildContext context,
-    CharacterModel character,
-    CharacterController controller,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 25),
-      child: GestureDetector(
-        onTap: () async {
-          final picker = ImagePicker();
-          final pickedFile = await picker.pickImage(
-            source: ImageSource.gallery,
-          );
-          if (pickedFile != null) {
-            controller.updateAvatarPath(pickedFile.path);
-          }
-        },
-        child: Container(
-          height: 150,
-          width: 150,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 3,
-            ),
-          ),
-          child: character.avatarPath != null
-              ? ClipOval(
-                  child: Image.file(
-                    File(character.avatarPath!),
-                    fit: BoxFit.cover,
-                  ),
-                )
-              : const Icon(Icons.person, size: 50),
-        ),
-      ),
-    );
-  }
-
-  /// ======================
-  /// PROPRIEDADES
-  /// ======================
-  Widget _buildLifeProperty({
+  Widget _buildPropertyContent({
     required BuildContext context,
     required String title,
     required String text,
@@ -226,13 +99,145 @@ class CharacterProfileComponent extends ConsumerWidget {
   }
 
   /// ======================
+  /// LADO ESQUERDO
+  /// ======================
+  Widget _buildLeftColumn(BuildContext context, CharacterViewModel viewModel) {
+    final character = viewModel.character!;
+    return SizedBox(
+      height: 200,
+      width: 75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildPropertyContent(
+            context: context,
+            title: 'Pontos de Vida',
+            text: '${character.life}/${character.maxLife}',
+            icon: Icons.favorite,
+            onTap: () => _openValueDialog(
+              context: context,
+              title: 'PV Atual',
+              initialValue: character.life,
+              minValue: 0,
+              onSave: viewModel.updateLife,
+            ),
+            onLongPress: () => _openValueDialog(
+              context: context,
+              title: 'PV Máximo',
+              initialValue: character.maxLife,
+              minValue: 1,
+              onSave: viewModel.updateMaxLife,
+            ),
+          ),
+          _buildPropertyContent(
+            context: context,
+            title: 'Vida Temporária',
+            text: '${character.temporaryLife}',
+            icon: Icons.favorite_border,
+            onTap: () {},
+            onLongPress: () => _openValueDialog(
+              context: context,
+              title: 'Vida Temporária',
+              initialValue: character.temporaryLife,
+              minValue: 0,
+              onSave: viewModel.updateTemporaryLife,
+            ),
+          ),
+          _buildPropertyContent(
+            context: context,
+            title: 'Classe de Armadura',
+            text: '${character.armorClass}',
+            icon: Icons.shield,
+            onTap: () {},
+            onLongPress: () => _openValueDialog(
+              context: context,
+              title: 'Classe de Armadura',
+              initialValue: character.armorClass,
+              minValue: 0,
+              onSave: viewModel.updateArmorClass,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ======================
+  /// LADO DIREITO
+  /// ======================
+  Widget _buildRightColumn(CharacterViewModel viewModel) {
+    return SizedBox(
+      height: 200,
+      width: 75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildProperty(
+            icon: Icons.flash_on,
+            title: 'Iniciativa',
+            text: '+${viewModel.initiative}',
+          ),
+          _buildProperty(
+            icon: Icons.remove_red_eye,
+            title: 'Percepção Passiva',
+            text: '${viewModel.passivePerception}',
+          ),
+          _buildProperty(
+            icon: Icons.sports_martial_arts,
+            title: 'Bônus de Proficiência',
+            text: '+${viewModel.proficiencyBonus}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ======================
+  /// AVATAR
+  /// ======================
+  Widget _buildAvatar(BuildContext context, CharacterViewModel viewModel) {
+    final character = viewModel.character!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 25),
+      child: GestureDetector(
+        onTap: () async {
+          final picker = ImagePicker();
+          final pickedFile = await picker.pickImage(
+            source: ImageSource.gallery,
+          );
+          if (pickedFile != null) {
+            viewModel.updateAvatarPath(pickedFile.path);
+          }
+        },
+        child: Container(
+          height: 150,
+          width: 150,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+              width: 3,
+            ),
+          ),
+          child: character.avatarPath != null
+              ? ClipOval(
+                  child: Image.file(
+                    File(character.avatarPath!),
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const Icon(Icons.person, size: 50),
+        ),
+      ),
+    );
+  }
+
+  /// ======================
   /// TÍTULO INFERIOR
   /// ======================
-  Container _buildTitleBar(
-    BuildContext context,
-    CharacterModel character,
-    WidgetRef ref,
-  ) {
+  Container _buildTitleBar(BuildContext context, CharacterViewModel viewModel) {
+    final character = viewModel.character!;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Theme.of(context).colorScheme.outline),
@@ -244,7 +249,7 @@ class CharacterProfileComponent extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: GestureDetector(
-              onLongPress: () => _showEditNameDialog(context, ref, character),
+              onLongPress: () => _showEditNameDialog(context, viewModel),
               child: Text(
                 character.name,
                 style: const TextStyle(
@@ -263,12 +268,10 @@ class CharacterProfileComponent extends ConsumerWidget {
 
   Future<void> _showEditNameDialog(
     BuildContext context,
-    WidgetRef ref,
-    CharacterModel character,
+    CharacterViewModel viewModel,
   ) async {
-    final controller = ref.read(characterProvider.notifier);
-    final TextEditingController textController = TextEditingController(
-      text: character.name,
+    final textController = TextEditingController(
+      text: viewModel.character?.name,
     );
 
     await showDialog(
@@ -288,7 +291,7 @@ class CharacterProfileComponent extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
-                  controller.updateName(textController.text.trim());
+                  viewModel.updateName(textController.text.trim());
                 }
                 Navigator.pop(context);
               },
@@ -301,7 +304,7 @@ class CharacterProfileComponent extends ConsumerWidget {
   }
 
   /// ======================
-  /// DIÁLOGO GENÉRICO
+  /// DIÁLOGO GENÉRICO DE VALORES
   /// ======================
   Future<void> _openValueDialog({
     required BuildContext context,
@@ -333,9 +336,7 @@ class CharacterProfileComponent extends ConsumerWidget {
                   Text('$currentValue', style: const TextStyle(fontSize: 24)),
                   IconButton(
                     icon: const Icon(Icons.add),
-                    onPressed: () {
-                      setState(() => currentValue++);
-                    },
+                    onPressed: () => setState(() => currentValue++),
                   ),
                 ],
               ),

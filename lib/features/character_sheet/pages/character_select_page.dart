@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
-import '../services/character_service.dart'; // Altere para importar o serviço unificado
+import '../services/character_service.dart';
 
 class CharacterSelectPage extends ConsumerWidget {
   const CharacterSelectPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use o provider unificado
     final charactersAsync = ref.watch(characterListProvider);
 
     return Scaffold(
@@ -55,7 +54,6 @@ class CharacterSelectPage extends ConsumerWidget {
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
-                    // Navegue para a ficha do personagem
                     context.go('/character-sheet?id=${character.id}');
                   },
                 ),

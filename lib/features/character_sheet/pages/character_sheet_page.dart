@@ -1,57 +1,74 @@
-import 'package:aventuris_app/features/character_sheet/components/ability_score_component.dart';
 import 'package:aventuris_app/features/character_sheet/components/character_profile_component.dart';
-import 'package:aventuris_app/features/character_sheet/viewmodels/character_profile_viewmodel.dart';
+import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
+import 'package:aventuris_app/features/character_sheet/viewmodels/character_viewmodel.dart';
+import 'package:aventuris_app/features/character_sheet/providers/character_providers.dart'; // Adicione esta importação
+import 'package:aventuris_app/features/character_sheet/views/character_atribute_details_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
-import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 
-class CharacterSheetPage extends ConsumerStatefulWidget {
+class CharacterSheetPage extends ConsumerWidget {
   const CharacterSheetPage({super.key});
 
   @override
-  ConsumerState<CharacterSheetPage> createState() => _CharacterSheetPageState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final id = GoRouterState.of(context).uri.queryParameters['id'];
+    if (id == null) {
+      return const Scaffold(body: Center(child: Text('ID não informado')));
+    }
+
+    final viewModelState = ref.watch(characterViewModelProvider(id));
+
+    return viewModelState.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Erro: $error'))),
+      data: (character) {
+        if (character == null) {
+          return const Scaffold(
+            body: Center(child: Text('Personagem não encontrado')),
+          );
+        }
+
+        final viewModel = ref.read(characterViewModelProvider(id).notifier);
+        return _CharacterSheetContent(viewModel: viewModel);
+      },
+    );
+  }
 }
 
-class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
-  bool _initialized = false;
+class _CharacterSheetContent extends StatefulWidget {
+  final CharacterViewModel viewModel;
+
+  const _CharacterSheetContent({required this.viewModel});
+
+  @override
+  State<_CharacterSheetContent> createState() => _CharacterSheetContentState();
+}
+
+class _CharacterSheetContentState extends State<_CharacterSheetContent> {
   int _screenIndex = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      final id = GoRouterState.of(context).uri.queryParameters['id'];
-      if (id != null) {
-        ref
-            .read(characterProfileViewModelProvider.notifier)
-            .loadCharacterById(id);
-      }
-      _initialized = true;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final character = ref.watch(characterProvider);
-
+    final character = widget.viewModel.character;
     if (character == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: Text('Personagem não encontrado')),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            context.go('/character-select');
-          },
+          onPressed: () => context.go('/character-select'),
         ),
       ),
       body: Column(
         children: [
-          CharacterProfileComponent(),
+          CharacterProfileComponent(characterId: character.id),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -59,7 +76,7 @@ class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
                 child: Column(
                   children: [
                     if (_screenIndex == 0)
-                      AbilityScoresComponent(character: character),
+                      CharacterAttributeDetailsView(characterId: character.id),
                     if (_screenIndex == 1) _buildHistoryView(character),
                     if (_screenIndex == 2) _buildArmoryView(),
                     if (_screenIndex == 3) _buildOtherView(),
@@ -74,11 +91,7 @@ class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
         currentIndex: _screenIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.outline,
-        onTap: (index) {
-          setState(() {
-            _screenIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _screenIndex = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Atributos'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'História'),

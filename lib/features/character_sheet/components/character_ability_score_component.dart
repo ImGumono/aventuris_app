@@ -1,20 +1,16 @@
-import 'package:aventuris_app/features/character_sheet/components/save_throw.component.dart';
-import 'package:aventuris_app/features/character_sheet/components/skills_proficiency_component.dart';
-import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
-import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
-import 'package:aventuris_app/features/character_sheet/widgets/title_divider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/title_divider_widget.dart';
+import '../viewmodels/character_viewmodel.dart';
 
-class AbilityScoresComponent extends ConsumerWidget {
-  const AbilityScoresComponent({super.key, required this.character});
-  final CharacterModel character;
+class CharacterAbilityScoreComponent extends ConsumerWidget {
+  final CharacterViewModel viewModel;
+
+  const CharacterAbilityScoreComponent({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final character = ref.watch(characterProvider);
-    final controller = ref.read(characterProvider.notifier);
-
+    final character = viewModel.character; // precisa do getter
     if (character == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -22,53 +18,48 @@ class AbilityScoresComponent extends ConsumerWidget {
     return Column(
       children: [
         const TitleDivider(title: 'Valores de Atributos'),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _AbilityBox(
-                title: 'For',
-                value: character.strength,
-                modifier: controller.calculateModifier(character.strength),
-                onEdit: (v) => controller.updateStrength(v),
-              ),
-              _AbilityBox(
-                title: 'Des',
-                value: character.dexterity,
-                modifier: controller.calculateModifier(character.dexterity),
-                onEdit: (v) => controller.updateDexterity(v),
-              ),
-              _AbilityBox(
-                title: 'Con',
-                value: character.constitution,
-                modifier: controller.calculateModifier(character.constitution),
-                onEdit: (v) => controller.updateConstitution(v),
-              ),
-              _AbilityBox(
-                title: 'Int',
-                value: character.intelligence,
-                modifier: controller.calculateModifier(character.intelligence),
-                onEdit: (v) => controller.updateIntelligence(v),
-              ),
-              _AbilityBox(
-                title: 'Sab',
-                value: character.wisdom,
-                modifier: controller.calculateModifier(character.wisdom),
-                onEdit: (v) => controller.updateWisdom(v),
-              ),
-              _AbilityBox(
-                title: 'Car',
-                value: character.charisma,
-                modifier: controller.calculateModifier(character.charisma),
-                onEdit: (v) => controller.updateCharisma(v),
-              ),
-            ],
-          ),
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            _AbilityBox(
+              title: 'For',
+              value: character.strength,
+              modifier: viewModel.strengthModifier,
+              onEdit: viewModel.updateStrength,
+            ),
+            _AbilityBox(
+              title: 'Des',
+              value: character.dexterity,
+              modifier: viewModel.dexterityModifier,
+              onEdit: viewModel.updateDexterity,
+            ),
+            _AbilityBox(
+              title: 'Con',
+              value: character.constitution,
+              modifier: viewModel.constitutionModifier,
+              onEdit: viewModel.updateConstitution,
+            ),
+            _AbilityBox(
+              title: 'Int',
+              value: character.intelligence,
+              modifier: viewModel.intelligenceModifier,
+              onEdit: viewModel.updateIntelligence,
+            ),
+            _AbilityBox(
+              title: 'Sab',
+              value: character.wisdom,
+              modifier: viewModel.wisdomModifier,
+              onEdit: viewModel.updateWisdom,
+            ),
+            _AbilityBox(
+              title: 'Car',
+              value: character.charisma,
+              modifier: viewModel.charismaModifier,
+              onEdit: viewModel.updateCharisma,
+            ),
+          ],
         ),
-        SaveThrowComponent(),
-        SkillsProficiencyComponent(),
       ],
     );
   }
@@ -117,7 +108,7 @@ class _AbilityBox extends StatelessWidget {
                   fontSize: 25,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
-                  shadows: [
+                  shadows: const [
                     Shadow(
                       color: Colors.black26,
                       blurRadius: 4,

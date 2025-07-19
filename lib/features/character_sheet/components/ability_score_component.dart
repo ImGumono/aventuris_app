@@ -1,12 +1,13 @@
-import 'package:aventuris_app/features/character_sheet/components/skills_proficiency_view.dart';
+import 'package:aventuris_app/features/character_sheet/components/save_throw.component.dart';
+import 'package:aventuris_app/features/character_sheet/components/skills_proficiency_component.dart';
 import 'package:aventuris_app/features/character_sheet/controllers/character_controller.dart';
 import 'package:aventuris_app/features/character_sheet/models/character_model.dart';
 import 'package:aventuris_app/features/character_sheet/widgets/title_divider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AbilityScoresView extends ConsumerWidget {
-  const AbilityScoresView({super.key, required this.character});
+class AbilityScoresComponent extends ConsumerWidget {
+  const AbilityScoresComponent({super.key, required this.character});
   final CharacterModel character;
 
   @override
@@ -66,7 +67,8 @@ class AbilityScoresView extends ConsumerWidget {
             ],
           ),
         ),
-        SkillsProficiencyView(),
+        SaveThrowComponent(),
+        SkillsProficiencyComponent(),
       ],
     );
   }

@@ -1,5 +1,5 @@
-import 'package:aventuris_app/features/character_sheet/components/ability_score_view.dart';
-import 'package:aventuris_app/features/character_sheet/components/character_profile_view.dart';
+import 'package:aventuris_app/features/character_sheet/components/ability_score_component.dart';
+import 'package:aventuris_app/features/character_sheet/components/character_profile_component.dart';
 import 'package:aventuris_app/features/character_sheet/viewmodels/character_profile_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
       ),
       body: Column(
         children: [
-          CharacterProfileView(),
+          CharacterProfileComponent(),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -59,7 +59,7 @@ class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
                 child: Column(
                   children: [
                     if (_screenIndex == 0)
-                      AbilityScoresView(character: character),
+                      AbilityScoresComponent(character: character),
                     if (_screenIndex == 1) _buildHistoryView(character),
                     if (_screenIndex == 2) _buildArmoryView(),
                     if (_screenIndex == 3) _buildOtherView(),

@@ -6,8 +6,8 @@ import 'package:aventuris_app/features/character_sheet/widgets/title_divider_wid
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SkillsProficiencyView extends ConsumerWidget {
-  const SkillsProficiencyView({super.key});
+class SkillsProficiencyComponent extends ConsumerWidget {
+  const SkillsProficiencyComponent({super.key});
 
   static const List<String> allSkills = [
     'Atletismo', // Força

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/character_controller.dart';
+import '../services/character_service.dart';
 
 final characterProfileViewModelProvider =
     StateNotifierProvider<CharacterProfileViewModel, CharacterProfileUIState>(
@@ -80,6 +81,15 @@ class CharacterProfileViewModel extends StateNotifier<CharacterProfileUIState> {
         break;
       default:
         break;
+    }
+  }
+
+  Future<void> loadCharacterById(String id) async {
+    final service = ref.read(characterServiceProvider);
+    final character = await service.fetchCharacterById(id);
+    if (character != null) {
+      // Atualiza o controller com o personagem carregado
+      ref.read(characterProvider.notifier).setCharacter(character);
     }
   }
 

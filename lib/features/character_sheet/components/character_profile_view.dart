@@ -76,28 +76,28 @@ class CharacterProfileView extends ConsumerWidget {
             title: 'Vida Temporária',
             text: '${character.temporaryLife}',
             icon: Icons.favorite_border,
-            onTap: () => _openValueDialog(
+            onTap: () {},
+            onLongPress: () => _openValueDialog(
               context: context,
               title: 'Vida Temporária',
               initialValue: character.temporaryLife,
               minValue: 0,
               onSave: controller.setTemporaryLife,
             ),
-            onLongPress: () {},
           ),
           _buildLifeProperty(
             context: context,
             title: 'Classe de Armadura',
             text: '${character.armorClass}',
             icon: Icons.shield,
-            onTap: () => _openValueDialog(
+            onTap: () {},
+            onLongPress: () => _openValueDialog(
               context: context,
               title: 'Classe de Armadura',
               initialValue: character.armorClass,
               minValue: 0,
               onSave: controller.setArmorClass,
             ),
-            onLongPress: () {},
           ),
         ],
       ),

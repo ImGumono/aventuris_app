@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/character_list_service.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
+import '../services/character_service.dart'; // Altere para importar o serviço unificado
 
 class CharacterSelectPage extends ConsumerWidget {
   const CharacterSelectPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Use o provider unificado
     final charactersAsync = ref.watch(characterListProvider);
 
     return Scaffold(
@@ -21,7 +23,6 @@ class CharacterSelectPage extends ConsumerWidget {
           },
         ),
       ),
-
       body: charactersAsync.when(
         data: (characters) {
           if (characters.isEmpty) {
@@ -39,9 +40,13 @@ class CharacterSelectPage extends ConsumerWidget {
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
-                  leading: character.avatarPath != null
+                  leading:
+                      character.avatarPath != null &&
+                          character.avatarPath!.isNotEmpty
                       ? CircleAvatar(
-                          backgroundImage: AssetImage(character.avatarPath!),
+                          backgroundImage: FileImage(
+                            File(character.avatarPath!),
+                          ),
                         )
                       : const CircleAvatar(child: Icon(Icons.person)),
                   title: Text(character.name),

@@ -1,30 +1,17 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/character_model.dart';
 import '../models/definitions.dart';
-import '../services/character_service.dart';
 
 final characterProvider =
     StateNotifierProvider<CharacterController, CharacterModel?>(
-      (ref) => CharacterController(ref),
+      (ref) => CharacterController(),
     );
 
 class CharacterController extends StateNotifier<CharacterModel?> {
-  final Ref _ref;
+  CharacterController() : super(null);
 
-  CharacterController(this._ref) : super(null);
-
-  // ====== Carregar Personagem ======
-  Future<void> loadCharacter() async {
-    final service = _ref.read(characterServiceProvider);
-    try {
-      final character = await service.loadCharacterFromLocal();
-      state = character;
-    } catch (e, stack) {
-      debugPrint('Erro ao carregar personagem: $e\n$stack');
-      state = null;
-    }
+  void setCharacter(CharacterModel character) {
+    state = character;
   }
 
   // ====== Atualização de Dados ======

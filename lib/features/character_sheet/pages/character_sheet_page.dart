@@ -1,5 +1,6 @@
 import 'package:aventuris_app/features/character_sheet/components/ability_score_view.dart';
 import 'package:aventuris_app/features/character_sheet/components/character_profile_view.dart';
+import 'package:aventuris_app/features/character_sheet/viewmodels/character_profile_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,14 +15,21 @@ class CharacterSheetPage extends ConsumerStatefulWidget {
 }
 
 class _CharacterSheetPageState extends ConsumerState<CharacterSheetPage> {
+  bool _initialized = false;
   int _screenIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      ref.read(characterProvider.notifier).loadCharacter();
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final id = GoRouterState.of(context).uri.queryParameters['id'];
+      if (id != null) {
+        ref
+            .read(characterProfileViewModelProvider.notifier)
+            .loadCharacterById(id);
+      }
+      _initialized = true;
+    }
   }
 
   @override
